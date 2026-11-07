@@ -8,6 +8,17 @@ interface HierarchyItem {
   value?: number;
 }
 
+export interface TileColorStyle {
+  bg: string;
+  border: string;
+  text: string;
+  accent: string;
+  hexBg: string;
+  hexBorder: string;
+  hexText: string;
+  intensity: 'muted' | 'medium' | 'high' | 'extreme' | 'neutral';
+}
+
 /**
  * Computes responsive squarified treemap bounding boxes for stocks
  */
@@ -15,7 +26,7 @@ export function computeTreemap(
   stocks: StockQuote[],
   width: number,
   height: number,
-  padding: number = 3
+  padding: number = 2
 ): TreemapNode[] {
   if (!stocks || stocks.length === 0 || width <= 0 || height <= 0) {
     return [];
@@ -24,10 +35,11 @@ export function computeTreemap(
   // Build hierarchy tree
   const rootData: HierarchyItem = {
     name: 'root',
-    children: stocks.map(stock => {
-      const safeCap = typeof stock.marketCap === 'number' && !isNaN(stock.marketCap) && stock.marketCap > 0
-        ? stock.marketCap
-        : 1000000000; // Safe default 1B / 1000 Cr fallback
+    children: stocks.map((stock) => {
+      const safeCap =
+        typeof stock.marketCap === 'number' && !isNaN(stock.marketCap) && stock.marketCap > 0
+          ? stock.marketCap
+          : 1000000000; // Safe default 1B fallback
       return {
         name: stock.symbol,
         stock,
@@ -37,13 +49,13 @@ export function computeTreemap(
   };
 
   const root = hierarchy<HierarchyItem>(rootData)
-    .sum(d => d.value || 0)
+    .sum((d) => d.value || 0)
     .sort((a, b) => (b.value || 0) - (a.value || 0));
 
-  // Initialize squarified treemap generator
+  // Squarified treemap layout generator
   const treemapLayout = treemap<HierarchyItem>()
     .size([width, height])
-    .tile(treemapSquarify.ratio(1.2))
+    .tile(treemapSquarify.ratio(1.15))
     .paddingInner(padding)
     .paddingOuter(0)
     .round(true);
@@ -79,52 +91,58 @@ export function computeTreemap(
 }
 
 /**
- * Returns color style based on percentage change and market view
- * Positive stocks: Green background (stronger percentage = stronger intensity)
- * Negative stocks: Red background (stronger drop = stronger intensity)
- * Neutral/0.00: Neutral grey
+ * Returns color styling with calibrated institutional hex codes and Tailwind classes.
+ * - Positive stocks: Emerald spectrum (stronger % = higher intensity)
+ * - Negative stocks: Crimson spectrum (stronger drop = higher intensity)
+ * - Flat / 0.00%: Neutral dark slate
  */
-export function getTileColorStyle(changePercent: number): {
-  bg: string;
-  border: string;
-  text: string;
-  accent: string;
-  intensity: 'muted' | 'medium' | 'high' | 'extreme' | 'neutral';
-} {
+export function getTileColorStyle(changePercent: number): TileColorStyle {
   const abs = Math.abs(changePercent);
 
   if (changePercent > 0.05) {
     // Green spectrum
     if (abs >= 5.0) {
       return {
-        bg: 'bg-[#10b981]', // radiant emerald
-        border: 'border-[#34d399]/40',
-        text: 'text-slate-950 font-bold',
-        accent: 'text-slate-900',
+        bg: 'bg-[#10B981]',
+        border: 'border-[#34D399]/60',
+        text: 'text-[#042F2E]',
+        accent: 'text-[#064E3B]',
+        hexBg: '#10B981',
+        hexBorder: '#34D399',
+        hexText: '#042F2E',
         intensity: 'extreme',
       };
     } else if (abs >= 3.0) {
       return {
-        bg: 'bg-[#059669]', // deep vibrant green
-        border: 'border-[#10b981]/40',
-        text: 'text-white font-bold',
+        bg: 'bg-[#059669]',
+        border: 'border-[#10B981]/50',
+        text: 'text-white',
         accent: 'text-emerald-100',
+        hexBg: '#059669',
+        hexBorder: '#10B981',
+        hexText: '#FFFFFF',
         intensity: 'high',
       };
     } else if (abs >= 1.5) {
       return {
-        bg: 'bg-[#047857]', // rich medium green
-        border: 'border-[#059669]/40',
-        text: 'text-white font-semibold',
+        bg: 'bg-[#047857]',
+        border: 'border-[#059669]/50',
+        text: 'text-white',
         accent: 'text-emerald-200',
+        hexBg: '#047857',
+        hexBorder: '#059669',
+        hexText: '#FFFFFF',
         intensity: 'medium',
       };
     } else {
       return {
-        bg: 'bg-[#064e3b]', // subtle dark green
-        border: 'border-[#047857]/50',
-        text: 'text-emerald-100 font-medium',
+        bg: 'bg-[#064E3B]',
+        border: 'border-[#047857]/60',
+        text: 'text-emerald-100',
         accent: 'text-emerald-300',
+        hexBg: '#064E3B',
+        hexBorder: '#047857',
+        hexText: '#ECFDF5',
         intensity: 'muted',
       };
     }
@@ -132,44 +150,59 @@ export function getTileColorStyle(changePercent: number): {
     // Red spectrum
     if (abs >= 5.0) {
       return {
-        bg: 'bg-[#ef4444]', // fiery scarlet
-        border: 'border-[#f87171]/40',
-        text: 'text-white font-bold',
+        bg: 'bg-[#EF4444]',
+        border: 'border-[#F87171]/60',
+        text: 'text-white',
         accent: 'text-red-100',
+        hexBg: '#EF4444',
+        hexBorder: '#F87171',
+        hexText: '#FFFFFF',
         intensity: 'extreme',
       };
     } else if (abs >= 3.0) {
       return {
-        bg: 'bg-[#dc2626]', // vivid crimson
-        border: 'border-[#ef4444]/40',
-        text: 'text-white font-bold',
+        bg: 'bg-[#DC2626]',
+        border: 'border-[#EF4444]/50',
+        text: 'text-white',
         accent: 'text-red-100',
+        hexBg: '#DC2626',
+        hexBorder: '#EF4444',
+        hexText: '#FFFFFF',
         intensity: 'high',
       };
     } else if (abs >= 1.5) {
       return {
-        bg: 'bg-[#b91c1c]', // medium deep red
-        border: 'border-[#dc2626]/40',
-        text: 'text-white font-semibold',
+        bg: 'bg-[#B91C1C]',
+        border: 'border-[#DC2626]/50',
+        text: 'text-white',
         accent: 'text-red-200',
+        hexBg: '#B91C1C',
+        hexBorder: '#DC2626',
+        hexText: '#FFFFFF',
         intensity: 'medium',
       };
     } else {
       return {
-        bg: 'bg-[#7f1d1d]', // subtle dark maroon
-        border: 'border-[#991b1b]/50',
-        text: 'text-red-100 font-medium',
+        bg: 'bg-[#7F1D1D]',
+        border: 'border-[#991B1B]/60',
+        text: 'text-red-100',
         accent: 'text-red-300',
+        hexBg: '#7F1D1D',
+        hexBorder: '#991B1B',
+        hexText: '#FEF2F2',
         intensity: 'muted',
       };
     }
   } else {
-    // Neutral grey for unchanged (0.00%)
+    // Flat / Unchanged
     return {
-      bg: 'bg-[#1f2937]',
-      border: 'border-[#374151]',
-      text: 'text-slate-300 font-medium',
+      bg: 'bg-[#1E293B]',
+      border: 'border-[#334155]',
+      text: 'text-slate-300',
       accent: 'text-slate-400',
+      hexBg: '#1E293B',
+      hexBorder: '#334155',
+      hexText: '#CBD5E1',
       intensity: 'neutral',
     };
   }

@@ -29,14 +29,17 @@ export const TreemapTile: React.FC<TreemapTileProps> = ({
   const isPos = stock.changePercent >= 0;
   const colorStyle = getTileColorStyle(stock.changePercent);
 
-  // Sizing tiers
-  const isLarge = width >= 120 && height >= 85;
-  const isMedium = (width >= 80 && height >= 55) || (width >= 65 && height >= 75);
-  const isSmall = width >= 45 && height >= 35;
+  // Sizing tiers for optimal typography density
+  const isLarge = width >= 110 && height >= 80;
+  const isMedium = (width >= 70 && height >= 50) || (width >= 60 && height >= 70);
+  const isSmall = width >= 38 && height >= 28;
   const isTiny = !isSmall;
 
-  // Format price
+  // Formatted price string
   const formattedPrice = formatCurrency(stock.price, stock.market);
+
+  // Text color based on tile background
+  const textColor = colorStyle.hexText;
 
   return (
     <div
@@ -50,65 +53,66 @@ export const TreemapTile: React.FC<TreemapTileProps> = ({
         top: `${y0}px`,
         width: `${width}px`,
         height: `${height}px`,
-        transition: 'transform 0.15s ease, box-shadow 0.15s ease, background-color 0.25s ease',
+        backgroundColor: colorStyle.hexBg,
+        borderColor: colorStyle.hexBorder,
+        color: textColor,
+        transition: 'transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease',
       }}
-      className={`group cursor-pointer rounded overflow-hidden select-none border ${colorStyle.bg} ${colorStyle.border} hover:z-20 hover:scale-[1.01] hover:shadow-xl hover:shadow-black/60 flex flex-col items-center justify-center text-center p-1 relative`}
+      className="group cursor-pointer rounded overflow-hidden select-none border hover:z-20 hover:scale-[1.01] hover:brightness-110 hover:shadow-2xl hover:shadow-black/80 flex flex-col items-center justify-center text-center p-1 relative font-sans"
     >
       {/* Exchange pill badge for large tiles */}
       {isLarge && (
-        <span className="absolute top-1 right-1 text-[9px] font-mono px-1 py-0.2 rounded bg-black/30 text-white/80 border border-white/10 uppercase">
+        <span className="absolute top-1 right-1 text-[8px] font-mono px-1 py-0.2 rounded bg-black/35 text-white/90 border border-white/10 uppercase tracking-wider">
           {stock.exchange}
         </span>
       )}
 
       {isLarge ? (
-        // Large Tile Content
-        <div className="flex flex-col items-center justify-center w-full px-1.5 py-1">
-          <span className="font-extrabold font-mono text-sm sm:text-base tracking-wider text-white drop-shadow-sm">
+        // Large Tile: Symbol, Name, Change %, Price
+        <div className="flex flex-col items-center justify-center w-full px-1.5 py-0.5">
+          <span className="font-extrabold font-mono text-sm sm:text-base tracking-wide text-white drop-shadow-sm">
             {stock.symbol}
           </span>
-          <span className="text-[11px] text-white/80 truncate max-w-full font-medium leading-tight">
+          <span className="text-[11px] text-white/85 truncate max-w-full font-medium leading-tight mt-0.5">
             {stock.name}
           </span>
-          <div className="mt-1 flex items-center gap-1.5">
-            <span className={`text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-black/25 text-white`}>
+          <div className="mt-1 flex items-center gap-1">
+            <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded bg-black/30 text-white shadow-inner">
               {isPos ? '+' : ''}{stock.changePercent.toFixed(2)}%
             </span>
           </div>
-          <span className="text-[11px] font-mono text-white/90 mt-0.5 font-semibold">
+          <span className="text-[11px] font-mono text-white/95 mt-0.5 font-bold">
             {formattedPrice}
           </span>
         </div>
       ) : isMedium ? (
-        // Medium Tile Content
+        // Medium Tile: Symbol, Change %, Price (if space)
         <div className="flex flex-col items-center justify-center w-full px-1">
           <span className="font-extrabold font-mono text-xs sm:text-sm tracking-wide text-white drop-shadow-sm">
             {stock.symbol}
           </span>
-          <span className="text-[11px] font-mono font-bold mt-0.5 text-white">
+          <span className="text-[11px] font-mono font-bold mt-0.5 text-white drop-shadow-sm">
             {isPos ? '+' : ''}{stock.changePercent.toFixed(2)}%
           </span>
-          {height >= 70 && (
-            <span className="text-[10px] font-mono text-white/80 mt-0.5">
+          {height >= 65 && (
+            <span className="text-[10px] font-mono text-white/90 mt-0.5 font-semibold">
               {formattedPrice}
             </span>
           )}
         </div>
       ) : isSmall ? (
-        // Small Tile Content
-        <div className="flex flex-col items-center justify-center w-full overflow-hidden">
+        // Small Tile: Symbol, Change %
+        <div className="flex flex-col items-center justify-center w-full px-0.5 overflow-hidden">
           <span className="font-bold font-mono text-[11px] leading-tight text-white truncate max-w-full">
             {stock.symbol}
           </span>
-          {height >= 40 && (
-            <span className="text-[9px] font-mono font-semibold text-white/95 leading-none mt-0.5">
-              {isPos ? '+' : ''}{stock.changePercent.toFixed(1)}%
-            </span>
-          )}
+          <span className="text-[10px] font-mono font-bold text-white/95 leading-tight mt-0.5">
+            {isPos ? '+' : ''}{stock.changePercent.toFixed(1)}%
+          </span>
         </div>
       ) : (
-        // Tiny Tile Content
-        <span className="font-bold font-mono text-[9px] text-white/90 truncate max-w-full leading-none">
+        // Tiny Tile: Symbol only
+        <span className="font-bold font-mono text-[9px] text-white truncate max-w-full px-0.5">
           {stock.symbol}
         </span>
       )}

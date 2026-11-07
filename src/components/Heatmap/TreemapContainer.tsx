@@ -25,24 +25,23 @@ export const TreemapContainer: React.FC<TreemapContainerProps> = ({
   onResetFilters,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
 
   // Monitor container size with ResizeObserver
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const updateSize = () => {
+    const measure = () => {
       const rect = el.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        setDimensions({
-          width: Math.floor(rect.width),
-          height: Math.floor(rect.height),
-        });
+      const w = Math.floor(rect.width);
+      const h = Math.floor(rect.height);
+      if (w > 0 && h > 0) {
+        setDimensions({ width: w, height: h });
       }
     };
 
-    updateSize();
+    measure();
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
@@ -65,29 +64,33 @@ export const TreemapContainer: React.FC<TreemapContainerProps> = ({
     if (dimensions.width <= 0 || dimensions.height <= 0 || stocks.length === 0) {
       return [];
     }
-    return computeTreemap(stocks, dimensions.width, dimensions.height, 2.5);
+    // Padding 2px for sharp institutional border grid
+    return computeTreemap(stocks, dimensions.width, dimensions.height, 2);
   }, [stocks, dimensions]);
 
   return (
-    <div className="flex flex-col flex-1 w-full bg-[#090D14] min-h-0">
-      {/* Treemap Canvas Area */}
+    <div className="flex flex-col flex-1 w-full bg-[#080B10] min-h-0">
+      
+      {/* Treemap Canvas Workspace */}
       <div 
         ref={containerRef}
-        className="relative flex-1 w-full min-h-[440px] sm:min-h-[520px] lg:min-h-[600px] overflow-hidden bg-[#090D14] p-1.5"
+        className="relative flex-1 w-full min-h-[520px] sm:min-h-[580px] lg:min-h-[640px] overflow-hidden bg-[#080B10] p-1.5"
       >
         {stocks.length === 0 ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-[#0c121e]/80">
-            <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-400 mb-3">
-              <AlertCircle className="w-6 h-6" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-[#080B10]">
+            <div className="w-12 h-12 rounded-xl bg-[#10151D] border border-[#202836] flex items-center justify-center text-slate-400 mb-3">
+              <AlertCircle className="w-6 h-6 text-amber-400" />
             </div>
-            <h3 className="text-base font-bold text-slate-200 font-mono">NO STOCKS MATCH CRITERIA</h3>
+            <h3 className="text-base font-bold text-slate-200 font-mono">
+              NO STOCKS MATCH CRITERIA
+            </h3>
             <p className="text-xs text-slate-400 max-w-sm mt-1">
-              Adjust your search keywords, market cap filter, or selected sector to view stocks in this segment.
+              Adjust your search keywords, market cap filter, or selected sector to view stocks in this market segment.
             </p>
             {onResetFilters && (
               <button
                 onClick={onResetFilters}
-                className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold font-mono transition"
+                className="mt-4 flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25 text-xs font-semibold font-mono transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset All Filters</span>
@@ -111,8 +114,9 @@ export const TreemapContainer: React.FC<TreemapContainerProps> = ({
         )}
       </div>
 
-      {/* Finviz Legend & Aggregate Statistics */}
+      {/* Integrated Legend & Market Breadth Bar */}
       <TreemapLegend stocks={stocks} currentView={currentView} />
+
     </div>
   );
 };
